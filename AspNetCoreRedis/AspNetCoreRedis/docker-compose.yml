@@ -1,0 +1,28 @@
+﻿name: asp-netcore-redis
+services:
+  redis:
+    image: redis:alpine
+    hostname: redis
+    container_name: redis
+    command: redis-server --requirepass Aa123456
+    ports:
+      - "6379:6379"
+    networks:
+      - asp-net-core-redis
+
+  local-sql-server:
+    hostname: local-host-sql
+    container_name: local-sql-server
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - 1433:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Aa123456
+    networks:
+      - asp-net-core-redis
+
+networks:
+  asp-net-core-redis:
+    driver: bridge
+        
