@@ -1,9 +1,11 @@
+using AspNetCoreRedis.ActionFilter;
 using AspNetCoreRedis.DbContext;
 using AspNetCoreRedis.Jwt;
 using AspNetCoreRedis.Models;
 using AspNetCoreRedis.ServiceCollection;
 using AspNetCoreRedis.Services;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace AspNetCoreRedis;
 
@@ -30,7 +32,9 @@ public class Program
         {
             options.UseSqlServer(builder.Configuration.GetConnectionString("ProductConnectionString"));
         });
-
+        
+        var redisConnection = builder.Configuration.GetConnectionString("RedisConnectionString");
+        builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnection));
         var app = builder.Build();
 
         if (app.Environment.IsDevelopment())

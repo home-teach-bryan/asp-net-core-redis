@@ -1,17 +1,23 @@
-﻿using AspNetCoreRedis.DbContext;
+﻿using System.Text.Json;
+using AspNetCoreRedis.DbContext;
+using AspNetCoreRedis.Models;
 using AspNetCoreRedis.Models.Request;
 using AspNetCoreRedis.Models.Response;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace AspNetCoreRedis.Services;
 
 public class ProductService : IProductService
 {
     private readonly ProductDbContext _dbContext;
+    private readonly IDatabase _database;
 
-    public ProductService(ProductDbContext dbContext)
+
+    public ProductService(ProductDbContext dbContext, IConnectionMultiplexer connectionMultiplexer)
     {
         _dbContext = dbContext;
+        _database = connectionMultiplexer.GetDatabase();
     }
 
 
@@ -31,6 +37,8 @@ public class ProductService : IProductService
         };
         _dbContext.Products.Add(newProduct);
         _dbContext.SaveChanges();
+        FlushCache(RedisKeyConst.Products);
+        
         return true;
     }
 
@@ -46,6 +54,7 @@ public class ProductService : IProductService
         existProduct.Quantity = product.Quantity;
         existProduct.Updated = DateTime.Now;
         _dbContext.SaveChanges();
+        FlushCache(RedisKeyConst.Products);
         return true;
     }
 
@@ -58,12 +67,24 @@ public class ProductService : IProductService
         }
         _dbContext.Products.Remove(existProduct);
         _dbContext.SaveChanges();
+        FlushCache(RedisKeyConst.Products);
         return true;
     }
 
     public List<GetProductResponse> GetAllProducts()
     {
-        return _dbContext.Products.AsNoTracking().Select(item => new GetProductResponse
+        List<Product> products;
+        if (_database.KeyExists(RedisKeyConst.Products))
+        {
+            var productsJson = _database.StringGet(RedisKeyConst.Products);
+            products = JsonSerializer.Deserialize<List<Product>>(productsJson);
+        }
+        else
+        {
+            products = _dbContext.Products.AsNoTracking().ToList();
+            _database.StringSet(RedisKeyConst.Products, JsonSerializer.Serialize(products));
+        }
+        return products.Select(item => new GetProductResponse
         {
             Id = item.Id,
             Name = item.Name,
@@ -87,4 +108,10 @@ public class ProductService : IProductService
             Quantity = existProduct.Quantity
         };
     }
+    
+    private void FlushCache(string redisKey)
+    {
+        this._database.KeyDelete(redisKey);
+    }
 }
+

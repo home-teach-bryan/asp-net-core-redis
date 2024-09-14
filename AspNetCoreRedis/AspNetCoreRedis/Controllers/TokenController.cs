@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using AspNetCoreRedis.ActionFilter;
 using AspNetCoreRedis.Jwt;
 using AspNetCoreRedis.Models.Enum;
 using AspNetCoreRedis.Models.Request;
@@ -33,6 +34,7 @@ public class TokenController : ControllerBase
     [AllowAnonymous]
     [HttpPost]
     [Route("")]
+    [RatelimitActionFilter]
     public IActionResult GetToken([FromBody] GetTokenRequest request)
     {
         var (isValid, user) = _userService.IsValid(request.Name, request.Password);
