@@ -1,16 +1,21 @@
 ﻿using AspNetCoreRedis.DbContext;
+using AspNetCoreRedis.Models;
 using AspNetCoreRedis.Models.Request;
 using AspNetCoreRedis.Models.Response;
+using StackExchange.Redis;
+using Order = AspNetCoreRedis.DbContext.Order;
 
 namespace AspNetCoreRedis.Services;
 
 public class OrderService : IOrderService 
 {
     private ProductDbContext _dbContext;
+    private IDatabase _database;
 
-    public OrderService(ProductDbContext dbContext)
+    public OrderService(ProductDbContext dbContext, IConnectionMultiplexer connectionMultiplexer)
     {
         _dbContext = dbContext;
+        _database = connectionMultiplexer.GetDatabase();
     }
 
     public bool AddOrder(List<AddOrderRequest> addOrderRequests, Guid userId)
@@ -40,6 +45,7 @@ public class OrderService : IOrderService
                 Product = product,
                 OrderQuantity = request.Quantity
             });
+            _database.SortedSetIncrement($"{RedisKeyConst.Products}:SaleRanking", product.Name, request.Quantity);
         }
 
         var order = new Order

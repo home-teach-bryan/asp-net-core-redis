@@ -5,6 +5,7 @@ using AspNetCoreRedis.Models.Request;
 using AspNetCoreRedis.Models.Response;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
+using Order = StackExchange.Redis.Order;
 
 namespace AspNetCoreRedis.Services;
 
@@ -108,7 +109,17 @@ public class ProductService : IProductService
             Quantity = existProduct.Quantity
         };
     }
-    
+
+    public List<GetProductSlaesRankingResponse> GetProductSlaesRanking()
+    {
+        var result =
+            _database.SortedSetRangeByRankWithScores($"{RedisKeyConst.Products}:SaleRanking", order: Order.Descending);
+        return result.Select(item => new GetProductSlaesRankingResponse
+        {
+            Name = item.Element.ToString(),
+            Quantity = item.Score
+        }).ToList();
+    }
     private void FlushCache(string redisKey)
     {
         this._database.KeyDelete(redisKey);

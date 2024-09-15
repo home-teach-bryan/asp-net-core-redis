@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AspNetCoreRedis.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using StackExchange.Redis;
 
@@ -11,8 +12,9 @@ public class RatelimitActionFilter : ActionFilterAttribute
         var connectionMultiplexer = context.HttpContext.RequestServices.GetService<IConnectionMultiplexer>();
         var database = connectionMultiplexer.GetDatabase();
         var path = context.HttpContext.Request.Path.Value;
-        var accessKey = $"accessCount:{path}";
-        var rateLimitKey = $"rateLimit:{path}";
+
+        var accessKey = $"{RedisKeyConst.AccessCount}:{path}";
+        var rateLimitKey = $"{RedisKeyConst.RateLimit}:{path}";
         if (database.KeyExists(rateLimitKey))
         {
             context.Result = new ContentResult

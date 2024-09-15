@@ -42,7 +42,7 @@ public class OrderController : ControllerBase
             return BadRequest(new ApiResponse<object>(ApiResponseStatus.AddOrderFail));
         }
 
-        return Ok(isSuccess);
+        return Ok(new ApiResponse<object>(ApiResponseStatus.Success));
 
     }
 
@@ -66,4 +66,6 @@ public class OrderController : ControllerBase
             Data = orderDetails
         });
     }
+    
+    
 }

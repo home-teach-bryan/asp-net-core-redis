@@ -125,4 +125,20 @@ public class ProductController : ControllerBase
             Data = result
         });
     }
+
+    /// <summary>
+    /// 取得商品銷售排行
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("Sales/Ranking")]
+    [Authorize(Roles = "Admin,User")]
+    public IActionResult GetProductSlaesRanking()
+    {
+        var result = _productService.GetProductSlaesRanking();
+        return Ok(new ApiResponse<object>(ApiResponseStatus.Success)
+        {
+            Data = result
+        });
+    }
 }

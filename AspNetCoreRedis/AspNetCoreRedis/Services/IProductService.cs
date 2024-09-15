@@ -14,4 +14,5 @@ public interface IProductService
     public List<GetProductResponse> GetAllProducts();
 
     public GetProductResponse GetProduct(Guid id);
+    public List<GetProductSlaesRankingResponse> GetProductSlaesRanking();
 }
